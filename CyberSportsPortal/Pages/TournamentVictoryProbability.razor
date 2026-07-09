@@ -1,0 +1,62 @@
+﻿@using CyberSportsPortal.Core.Services
+@using CyberSportsPortal.Data.Model.Views
+
+@inject TeamService TeamService
+@inject TournamentTasksService TournamentTasksService
+
+@if (views == null)
+{
+    <Spin size="large" Tip="Загрузка" />
+}
+else
+{
+    <Table @ref="@probabilityTable"
+       Title="Вероятности победы в турнире"
+       TItem="TeamVictoryProbabilityView"
+       DataSource="@views"
+       Bordered
+       HidePagination
+       PageSize=1000>
+        <Column Title="Стартовая позиция" Field="@context.Standing" />
+        <Column Title="Имя команды" Field="@context.TeamName" />
+        <Column Title="Вероятность победы в %" Field="@context.VictoryProbability" />
+    </Table>
+}
+
+@code {
+    private ITable probabilityTable;
+    private List<TeamVictoryProbabilityView> views;
+
+    [Parameter]
+    public TournamentFullView Tournament { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var teamsWithProbabilities = await TeamService.GetTeamsWithVictoryProbabilitiesForTournament(Tournament.TeamParticipantInfos.Select(x => x.TeamId).ToList());
+        var standings = new Dictionary<int, int>();
+        foreach (var team in Tournament.TeamParticipantInfos)
+        {
+            standings.Add(team.TeamId, team.Standing);
+        }
+
+        var tournamentVictoryProbabilities = TournamentTasksService.GetTournamentVictoryProbabilities(teamsWithProbabilities, standings);
+        views = new List<TeamVictoryProbabilityView>();
+        foreach (var team in teamsWithProbabilities)
+        {
+            views.Add(new TeamVictoryProbabilityView
+                {
+                    TeamName = team.Name,
+                    Standing = standings[team.Id],
+                    VictoryProbability = tournamentVictoryProbabilities.TryGetValue(team.Id, out decimal result) ? 0 : result,
+                });
+        }
+        views = views.OrderBy(x => x.Standing).ToList();
+    }
+
+    private class TeamVictoryProbabilityView
+    {
+        public string TeamName { get; set; }
+        public int Standing { get; set; }
+        public decimal VictoryProbability { get; set; }
+    }
+}

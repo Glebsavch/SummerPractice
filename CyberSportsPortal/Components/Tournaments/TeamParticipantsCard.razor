@@ -1,0 +1,19 @@
+﻿@using CyberSportsPortal.Core.Services
+@using CyberSportsPortal.Data.Entities
+
+@inject TournamentTasksService TournamentTasksService
+
+<Card Title="Команды" Style="border-radius:10px">
+    <body>
+        <div class="container">
+            <div class="row align-items-center">
+                    <p>@(TournamentTasksService.GetTeamParticipantsNameString(TeamNames))</p>
+            </div>
+        </div>
+    </body>
+</Card>
+
+@code {
+    [Parameter]
+    public List<string> TeamNames { get; set; }
+}
