@@ -47,15 +47,10 @@ public class TournamentTasksService
         var valueA = ParsePrize(prizeA);
         var valueB = ParsePrize(prizeB);
 
-        if (valueA == valueB)
-        {
-            return 0;
-        }
-
-        return valueA > valueB ? 1 : -1;
+        return Math.Sign(valueA.CompareTo(valueB)); // Math.Sign(int) гарантированно возвратит -1, 0 или 1
     }
 
-    // Оставляем только цифры, точку и минус (на всякий случай)
+    // Оставляем только цифры, точку (минус не учитываем, т.к. предполагаем, что призовые не могут быть отрицательными)
     private static decimal ParsePrize(string prize)
     {
         if (string.IsNullOrWhiteSpace(prize))
@@ -63,7 +58,7 @@ public class TournamentTasksService
             return 0m;
         }
 
-        var cleaned = new string(prize.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+        var cleaned = new string(prize.Where(c => char.IsDigit(c) || c == '.').ToArray());
 
         return decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
             ? result
